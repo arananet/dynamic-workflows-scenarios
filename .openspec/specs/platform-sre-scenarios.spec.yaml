@@ -1,0 +1,110 @@
+title: "Platform & SRE scenarios — cloud cost hotspots, production readiness scorecard"
+slug: "platform-sre-scenarios"
+type: feature
+status: approved
+
+author: "arananet"
+created_at: "2026-07-25"
+updated_at: "2026-07-25"
+
+roles:
+  implementer: "@arananet"
+  reviewer: "@arananet"
+  qa: "@arananet"
+  product_owner: "@arananet"
+
+description: |
+  Cloud spend and production reliability are both governed by decisions that
+  are individually trivial and collectively enormous: a retention setting, an
+  instance size, a missing timeout, an alert nobody owns. Finance can see the
+  bill but not the line of Terraform that causes it; the SRE team can name the
+  ten services they worry about but not the ninety they have never looked at.
+  The gap in both cases is coverage, and coverage is what fanning agents out
+  buys.
+
+  This feature ships two workflows.
+
+  `cloud-cost-hotspots` sweeps infrastructure-as-code and application code for
+  the patterns that actually move a cloud bill — over-provisioned compute,
+  unbounded log and data retention, cross-zone and egress chatter, always-on
+  non-production environments, N+1 access patterns against metered services,
+  and orphaned resources. Every hotspot is then re-estimated by an independent
+  agent, because the thing that kills a FinOps initiative is one confidently
+  wrong five-figure saving estimate. Findings that survive are returned as a
+  ranked backlog with an annualised saving band, a confidence level, and the
+  change required.
+
+  `slo-readiness-audit` scores every service against an explicit production
+  readiness rubric — SLOs defined, alerts that map to them, runbooks, sane
+  timeouts, retries with backoff and jitter, circuit breaking, graceful
+  degradation, health checks, and rollback. One assessor per service, an
+  independent verifier per claimed pass, and a synthesis pass that returns a
+  scorecard plus the gap backlog ordered by blast radius. It converts "we
+  think we are mostly fine" into a number a director can take to a QBR and a
+  list an on-call engineer can burn down.
+
+acceptance_criteria:
+  - "Given a scan root in `args.root` (default the repository root), when `cloud-cost-hotspots` runs, then a discovery agent first inventories the infrastructure and workload surfaces to scan and that inventory appears in the result."
+  - "Given a discovered surface inventory, when the sweep phase runs, then one agent is spawned per surface, capped by `args.maxSurfaces` (default 80), and each prompt names the cost patterns it must look for."
+  - "Given a claimed hotspot with a saving estimate, when the verification phase runs, then an independent agent re-derives the estimate and returns `confirmed`, `adjusted` or `refuted` with its own figure."
+  - "Given verification results, when the backlog is assembled, then each entry carries an annualised saving band, a confidence level derived from the verification verdict, the change required, and the owning surface — and refuted entries are excluded from the headline total while remaining listed."
+  - "Given a completed run, when the result is returned, then the headline saving total is the sum of confirmed and adjusted entries only, so the number reported upward is defensible."
+  - "Given a service inventory, when `slo-readiness-audit` runs, then one assessor agent is spawned per service, capped by `args.maxServices` (default 80), and each assessor scores every dimension in the rubric."
+  - "Given an assessor that scores a dimension as passing, when the verification phase runs, then an independent agent checks that specific claim, and a refuted claim reduces the service's score."
+  - "Given `args.rubric`, when `slo-readiness-audit` runs, then the supplied rubric replaces the default rubric and the result states which rubric was used."
+  - "Given verified assessments, when the scorecard is emitted, then each service has a score, a tier, and its failing dimensions, and the gap backlog is ordered so that gaps on higher-blast-radius services rank above equivalent gaps on lower-blast-radius ones."
+  - "Given an empty scope — no infrastructure surfaces, or no services discovered — when either workflow runs, then it returns a well-formed empty-scope result instead of throwing."
+
+test_plan:
+  - "Integration: `cloud-cost-hotspots` calls a discovery agent before any sweep agent, and the result exposes the discovered inventory."
+  - "Unit: a discovery stub returning 200 surfaces caps sweep agents at the default 80; `args.maxSurfaces: 5` caps them at 5."
+  - "Unit: one verification agent is spawned per claimed hotspot, and its prompt contains the hotspot's own saving estimate so it can be re-derived independently."
+  - "Unit: with a stub forcing every verification verdict to `refuted`, the headline saving total is zero and every refuted hotspot is still present in the result."
+  - "Unit: with a stub forcing verdicts to `adjusted`, the headline total uses the verifier's figure rather than the sweeper's."
+  - "Unit: every backlog entry has non-empty `surface`, `savingBand`, `confidence` and `change` fields."
+  - "Integration: `slo-readiness-audit` spawns one assessor per discovered service and each assessor prompt lists every rubric dimension."
+  - "Unit: `args.rubric` replaces the default dimension set, the result reports the rubric name, and assessor prompts list the supplied dimensions."
+  - "Unit: a refuted dimension claim lowers that service's score relative to the same assessment with the claim confirmed."
+  - "Unit: the gap backlog is sorted such that, for two gaps of equal severity, the one on the higher-blast-radius service appears first."
+  - "Integration: both workflows return an empty-scope result, without throwing, when their discovery phase yields nothing."
+
+qa_notes: |
+  `cloud-cost-hotspots` produces estimates from code, not from a billing API.
+  It is directionally useful for finding *where* the money goes and worthless
+  as an invoice. Treat the saving bands as a prioritisation signal and confirm
+  the top few against real billing data before anyone commits to a number in a
+  business case.
+
+  For `slo-readiness-audit`, run it once with the default rubric and once with
+  your own. If the two runs rank services identically, the rubric is not doing
+  any work and probably needs dimensions that actually discriminate between
+  your services.
+
+out_of_scope:
+  - "Reading cloud billing APIs, cost explorers or live metrics. Both workflows analyse code and configuration in the repository."
+  - "Applying any change — no resizing, no Terraform edits, no alert creation."
+  - "Runtime SLO measurement. `slo-readiness-audit` scores whether the machinery for an SLO exists, not whether the SLO is currently met."
+  - "Multi-cloud cost normalisation or currency conversion — saving bands are reported in the unit the operator supplies."
+
+implementation_skill: null
+
+eval_plan:
+  scenarios: []
+  metrics: []
+
+technical_notes: |
+  The independent re-estimation pass in `cloud-cost-hotspots` exists for a
+  political reason as much as a technical one. FinOps programmes lose
+  credibility on the first inflated saving claim, and an LLM asked to estimate
+  a saving will happily produce a confident number. Having a second agent
+  re-derive it from the same evidence, and reporting only confirmed and
+  adjusted figures in the headline, makes the total something an engineering
+  leader can repeat in a finance meeting.
+
+  Both workflows sort their backlog by blast radius rather than by raw
+  severity, because a medium gap on a payment path outranks a high gap on an
+  internal admin tool, and every readiness report that ignores this gets
+  ignored in turn.
+
+linked_issues: []
+linked_prs: []

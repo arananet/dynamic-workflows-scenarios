@@ -6,28 +6,44 @@ name: License scan
 #
 # Configure allowed/denied licenses in `.licenses/policy.yaml` (see template).
 
+# ─────────────────────────────────────────────────────────────────────────────
+# DISABLED for this repository.
+#
+# dynamic-workflows-scenarios ships workflow scripts and OpenSpec specs — no
+# built artifacts, no container images, no published packages, no dependency
+# tree. The automatic triggers below were removed so this workflow no longer
+# runs on push/PR/schedule; it is retained as manual-dispatch only.
+#
+# To re-enable: delete the `on: workflow_dispatch` block and uncomment the
+# original trigger block that follows it.
+# ─────────────────────────────────────────────────────────────────────────────
+
 on:
-  pull_request:
-    paths:
-      - "**/package.json"
-      - "**/package-lock.json"
-      - "**/requirements*.txt"
-      - "**/pyproject.toml"
-      - "**/Pipfile*"
-      - "**/go.mod"
-      - "**/go.sum"
-      - "**/Cargo.toml"
-      - "**/Cargo.lock"
-      - "**/pom.xml"
-      - "**/build.gradle*"
-      - "**/Gemfile*"
-      - "**/composer.json"
-      - ".licenses/**"
-      - ".github/workflows/license-scan.yml"
-  schedule:
-    - cron: "0 6 * * 1"  # weekly Monday sweep
   workflow_dispatch:
 
+# ── Original triggers (disabled):
+# on:
+#   pull_request:
+#     paths:
+#       - "**/package.json"
+#       - "**/package-lock.json"
+#       - "**/requirements*.txt"
+#       - "**/pyproject.toml"
+#       - "**/Pipfile*"
+#       - "**/go.mod"
+#       - "**/go.sum"
+#       - "**/Cargo.toml"
+#       - "**/Cargo.lock"
+#       - "**/pom.xml"
+#       - "**/build.gradle*"
+#       - "**/Gemfile*"
+#       - "**/composer.json"
+#       - ".licenses/**"
+#       - ".github/workflows/license-scan.yml"
+#   schedule:
+#     - cron: "0 6 * * 1"  # weekly Monday sweep
+#   workflow_dispatch:
+#
 permissions: read-all
 
 concurrency:

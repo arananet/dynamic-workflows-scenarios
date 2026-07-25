@@ -4,10 +4,26 @@ name: Initialize Repository
 # Creates the `main` branch if it doesn't exist and sets it as the default.
 # This is a no-op if the default branch is already `main`.
 
+# ─────────────────────────────────────────────────────────────────────────────
+# DISABLED for this repository.
+#
+# dynamic-workflows-scenarios ships workflow scripts and OpenSpec specs — no
+# built artifacts, no container images, no published packages, no dependency
+# tree. The automatic triggers below were removed so this workflow no longer
+# runs on push/PR/schedule; it is retained as manual-dispatch only.
+#
+# To re-enable: delete the `on: workflow_dispatch` block and uncomment the
+# original trigger block that follows it.
+# ─────────────────────────────────────────────────────────────────────────────
+
 on:
-  create:
   workflow_dispatch:
 
+# ── Original triggers (disabled):
+# on:
+#   create:
+#   workflow_dispatch:
+#
 permissions: read-all
 
 concurrency:

@@ -7,14 +7,30 @@ name: OSSF Scorecard
 #
 # Docs: https://github.com/ossf/scorecard-action
 
+# ─────────────────────────────────────────────────────────────────────────────
+# DISABLED for this repository.
+#
+# dynamic-workflows-scenarios ships workflow scripts and OpenSpec specs — no
+# built artifacts, no container images, no published packages, no dependency
+# tree. The automatic triggers below were removed so this workflow no longer
+# runs on push/PR/schedule; it is retained as manual-dispatch only.
+#
+# To re-enable: delete the `on: workflow_dispatch` block and uncomment the
+# original trigger block that follows it.
+# ─────────────────────────────────────────────────────────────────────────────
+
 on:
-  branch_protection_rule:
-  schedule:
-    - cron: "27 7 * * 1"   # 07:27 UTC every Monday
-  push:
-    branches: [main, master]
   workflow_dispatch:
 
+# ── Original triggers (disabled):
+# on:
+#   branch_protection_rule:
+#   schedule:
+#     - cron: "27 7 * * 1"   # 07:27 UTC every Monday
+#   push:
+#     branches: [main, master]
+#   workflow_dispatch:
+#
 permissions: read-all
 
 concurrency:

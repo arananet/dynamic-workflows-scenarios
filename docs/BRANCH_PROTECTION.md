@@ -122,7 +122,7 @@ Insights tab for a week to catch false positives, then switch to **Active**.
 Once configured, export the JSON so future forks can import it:
 
 ```bash
-gh api repos/{{GITHUB_OWNER}}/{{PROJECT_NAME}}/rulesets > ruleset.json
+gh api repos/arananet/dynamic-workflows-scenarios/rulesets > ruleset.json
 ```
 
 Check `ruleset.json` into a `docs/` or internal infra repo — don't commit it

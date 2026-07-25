@@ -14,11 +14,27 @@ name: DCO
 # combine DCO with required commit signing (Settings → Rules) — see
 # docs/BRANCH_PROTECTION.md.
 
+# ─────────────────────────────────────────────────────────────────────────────
+# DISABLED for this repository.
+#
+# dynamic-workflows-scenarios ships workflow scripts and OpenSpec specs — no
+# built artifacts, no container images, no published packages, no dependency
+# tree. The automatic triggers below were removed so this workflow no longer
+# runs on push/PR/schedule; it is retained as manual-dispatch only.
+#
+# To re-enable: delete the `on: workflow_dispatch` block and uncomment the
+# original trigger block that follows it.
+# ─────────────────────────────────────────────────────────────────────────────
+
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
+# ── Original triggers (disabled):
+# on:
+#   pull_request:
+#     types: [opened, synchronize, reopened]
+#   workflow_dispatch:
+#
 permissions: read-all
 
 concurrency:

@@ -1,0 +1,103 @@
+title: "Modernization & M&A scenarios — code due diligence, strangler-fig decomposition plan"
+slug: "modernization-ma-scenarios"
+type: feature
+status: approved
+
+author: "arananet"
+created_at: "2026-07-25"
+updated_at: "2026-07-25"
+
+roles:
+  implementer: "@arananet"
+  reviewer: "@arananet"
+  qa: "@arananet"
+  product_owner: "@arananet"
+
+description: |
+  Two of the most expensive judgement calls an enterprise makes are "what is
+  this codebase we are about to buy actually worth" and "how do we take this
+  monolith apart without stopping the business". Both are usually answered by
+  a small number of senior people sampling a small fraction of the code under
+  time pressure, and both are answered badly for exactly that reason — the
+  sample is too small and the plan reflects whichever architect argued hardest.
+
+  This feature ships two workflows that attack those two failure modes.
+
+  `ma-code-diligence` runs a technical due-diligence pass over a target
+  codebase across independent risk lenses — licensing, secret hygiene,
+  dependency end-of-life, test and release maturity, architectural coupling,
+  and key-person concentration. Each lens is assessed by its own agent and
+  scored independently, then a reconciliation agent produces a red-flag memo
+  that separates deal-breakers from post-close remediation, with an indicative
+  remediation cost. The output is written for a deal team, not an engineering
+  standup: it answers "what does this change about the price and the first
+  100 days".
+
+  `strangler-fig-plan` refuses to produce one migration plan. It maps the
+  monolith's seams, then drafts three decomposition strategies from
+  deliberately different angles — domain boundaries, data ownership, and
+  traffic/risk profile — has each critiqued by agents that did not write it,
+  scores them against explicit criteria, and only then emits a sequenced
+  roadmap for the winner. The point is that the roadmap you ship has already
+  survived the argument, and the plans it beat are attached so the decision is
+  auditable rather than asserted.
+
+acceptance_criteria:
+  - "Given a target path in `args.target` (default the repository root), when `ma-code-diligence` runs, then it assesses every risk lens in its lens set and each lens is handled by its own agent with a lens-specific prompt."
+  - "Given the lens assessments, when the reconciliation phase runs, then a single agent receives all lens results and returns a memo that classifies findings into deal-breaker, price-adjusting and post-close buckets."
+  - "Given any finding classified as a deal-breaker, when the memo is assembled, then that finding carries a named evidence location and an indicative remediation effort, so it can be defended in a negotiation."
+  - "Given `args.lenses`, when `ma-code-diligence` runs, then only the requested lenses are assessed, and an unknown lens name is reported in the result as skipped rather than silently ignored."
+  - "Given a monolith seam map, when `strangler-fig-plan` runs, then exactly three candidate decomposition plans are drafted, each by its own agent, and each prompt states a different decomposition angle."
+  - "Given three drafted plans, when the critique phase runs, then each plan is critiqued by an agent that did not draft it, and every plan receives the same number of critiques so scoring is not biased by attention."
+  - "Given the critiques, when the scoring phase runs, then each plan receives a score against the same explicit criteria set and the result exposes all three scores, not only the winner's."
+  - "Given a chosen plan, when the roadmap is emitted, then it is a sequenced list of slices where each slice names what moves, what stays, the rollback path, and the risk of that step."
+  - "Given a target with no discoverable seams or no discoverable lenses' worth of code, when either workflow runs, then it returns a well-formed empty-scope result instead of throwing."
+
+test_plan:
+  - "Integration: `ma-code-diligence` spawns one agent per lens in its default lens set, and each prompt contains its own lens name."
+  - "Unit: `args.lenses` restricted to two known lenses spawns exactly two lens agents; an unknown lens name appears in the result's `skippedLenses`."
+  - "Integration: the reconciliation agent is spawned exactly once and is called after all lens agents."
+  - "Unit: every deal-breaker entry in the memo has non-empty `evidence` and `effort` fields."
+  - "Integration: `strangler-fig-plan` drafts exactly three plans and the three drafting prompts contain three distinct angle names."
+  - "Unit: each of the three plans receives an equal number of critique agents, and no critique agent's prompt is paired with the plan it drafted."
+  - "Unit: the result exposes a score for all three plans and the selected plan is the highest-scoring one."
+  - "Unit: every slice in the emitted roadmap has non-empty `moves`, `remains`, `rollback` and `risk` fields."
+  - "Integration: both workflows return an empty-scope result, without throwing, when the scoping agent yields nothing."
+
+qa_notes: |
+  For `ma-code-diligence`, the lens set is the product. Run it against a
+  repository with a known planted problem (an AGPL transitive dependency, a
+  committed credential) and confirm the relevant lens catches it and that the
+  reconciliation memo escalates it to the right bucket.
+
+  For `strangler-fig-plan`, the failure mode is three plans that are really
+  the same plan with different words. Read all three drafts, not just the
+  winner: if the critiques are interchangeable between plans, the angle
+  prompts need sharpening.
+
+out_of_scope:
+  - "Executing any part of a migration. `strangler-fig-plan` produces a roadmap; moving code is a separate, human-approved effort."
+  - "Financial valuation. The diligence memo gives indicative remediation effort; it does not model deal price."
+  - "Legal review of licence obligations — the licensing lens flags risk for counsel, it is not counsel."
+  - "Cross-repository organisational analysis (org charts, contributor identity resolution beyond what git history shows)."
+
+implementation_skill: null
+
+eval_plan:
+  scenarios: []
+  metrics: []
+
+technical_notes: |
+  `strangler-fig-plan` uses the documentation's "draft a plan from several
+  independent angles and weigh them against each other" pattern rather than
+  the audit fan-out pattern. Its agent count is small and fixed (3 drafts,
+  3 x N critiques, 1 scorer, 1 roadmap) so it is cheap to run repeatedly while
+  an architecture decision is being argued.
+
+  `ma-code-diligence` deliberately keeps lenses independent — no lens sees
+  another lens's findings — so the reconciliation agent is combining genuinely
+  independent opinions. Letting lenses read each other would be cheaper and
+  strictly worse: correlated findings look like corroboration.
+
+linked_issues: []
+linked_prs: []
