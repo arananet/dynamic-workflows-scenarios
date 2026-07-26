@@ -4,17 +4,33 @@ name: Container scan
 # repository filesystem. Skipped automatically when no Dockerfile exists,
 # so it's safe to keep enabled in non-container projects.
 
+# ─────────────────────────────────────────────────────────────────────────────
+# DISABLED for this repository.
+#
+# dynamic-workflows-scenarios ships workflow scripts and OpenSpec specs — no
+# built artifacts, no container images, no published packages, no dependency
+# tree. The automatic triggers below were removed so this workflow no longer
+# runs on push/PR/schedule; it is retained as manual-dispatch only.
+#
+# To re-enable: delete the `on: workflow_dispatch` block and uncomment the
+# original trigger block that follows it.
+# ─────────────────────────────────────────────────────────────────────────────
+
 on:
-  pull_request:
-    paths:
-      - "**/Dockerfile*"
-      - "**/.dockerignore"
-      - "**/docker-compose*.yml"
-      - ".github/workflows/container-scan.yml"
-  schedule:
-    - cron: "0 5 * * 2"  # weekly Tuesday sweep (catches new CVEs)
   workflow_dispatch:
 
+# ── Original triggers (disabled):
+# on:
+#   pull_request:
+#     paths:
+#       - "**/Dockerfile*"
+#       - "**/.dockerignore"
+#       - "**/docker-compose*.yml"
+#       - ".github/workflows/container-scan.yml"
+#   schedule:
+#     - cron: "0 5 * * 2"  # weekly Tuesday sweep (catches new CVEs)
+#   workflow_dispatch:
+#
 permissions: read-all
 
 concurrency:

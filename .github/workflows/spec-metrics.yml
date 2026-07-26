@@ -8,11 +8,27 @@ name: Spec metrics
 # Runs weekly and posts a summary to the workflow run. Surface it via a
 # repo dashboard or a Slack/Teams webhook by extending the final step.
 
+# ─────────────────────────────────────────────────────────────────────────────
+# DISABLED for this repository.
+#
+# dynamic-workflows-scenarios ships workflow scripts and OpenSpec specs — no
+# built artifacts, no container images, no published packages, no dependency
+# tree. The automatic triggers below were removed so this workflow no longer
+# runs on push/PR/schedule; it is retained as manual-dispatch only.
+#
+# To re-enable: delete the `on: workflow_dispatch` block and uncomment the
+# original trigger block that follows it.
+# ─────────────────────────────────────────────────────────────────────────────
+
 on:
-  schedule:
-    - cron: "0 7 * * 1"  # Mondays 07:00 UTC
   workflow_dispatch:
 
+# ── Original triggers (disabled):
+# on:
+#   schedule:
+#     - cron: "0 7 * * 1"  # Mondays 07:00 UTC
+#   workflow_dispatch:
+#
 permissions: read-all
 
 concurrency:

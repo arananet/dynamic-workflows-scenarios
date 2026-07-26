@@ -9,10 +9,26 @@ name: Doc drift
 #   - Apply the `skip-doc-drift` label for true no-user-impact changes.
 #   - Dependency-only PRs (lockfile / manifest churn) are auto-skipped.
 
-on:
-  pull_request:
-    types: [opened, synchronize, reopened, labeled, unlabeled]
+# ─────────────────────────────────────────────────────────────────────────────
+# DISABLED for this repository.
+#
+# dynamic-workflows-scenarios ships workflow scripts and OpenSpec specs — no
+# built artifacts, no container images, no published packages, no dependency
+# tree. The automatic triggers below were removed so this workflow no longer
+# runs on push/PR/schedule; it is retained as manual-dispatch only.
+#
+# To re-enable: delete the `on: workflow_dispatch` block and uncomment the
+# original trigger block that follows it.
+# ─────────────────────────────────────────────────────────────────────────────
 
+on:
+  workflow_dispatch:
+
+# ── Original triggers (disabled):
+# on:
+#   pull_request:
+#     types: [opened, synchronize, reopened, labeled, unlabeled]
+#
 permissions: read-all
 
 concurrency:

@@ -16,18 +16,34 @@ name: Template Smoke Test
 #   - every workflow file parses as valid YAML
 #   - the placeholder substitution surface is intact
 
+# ─────────────────────────────────────────────────────────────────────────────
+# DISABLED for this repository.
+#
+# dynamic-workflows-scenarios ships workflow scripts and OpenSpec specs — no
+# built artifacts, no container images, no published packages, no dependency
+# tree. The automatic triggers below were removed so this workflow no longer
+# runs on push/PR/schedule; it is retained as manual-dispatch only.
+#
+# To re-enable: delete the `on: workflow_dispatch` block and uncomment the
+# original trigger block that follows it.
+# ─────────────────────────────────────────────────────────────────────────────
+
 on:
-  schedule:
-    - cron: "13 5 * * 1"   # 05:13 UTC every Monday
-  push:
-    branches: [main, master]
-    paths:
-      - "setup.sh"
-      - "hooks/**"
-      - ".claude/hooks/**"
-      - ".github/workflows/template-smoke-test.yml"
   workflow_dispatch:
 
+# ── Original triggers (disabled):
+# on:
+#   schedule:
+#     - cron: "13 5 * * 1"   # 05:13 UTC every Monday
+#   push:
+#     branches: [main, master]
+#     paths:
+#       - "setup.sh"
+#       - "hooks/**"
+#       - ".claude/hooks/**"
+#       - ".github/workflows/template-smoke-test.yml"
+#   workflow_dispatch:
+#
 permissions: read-all
 
 concurrency:

@@ -1,0 +1,101 @@
+title: "Regulated & compliance scenarios — control evidence sweep, regulatory change impact"
+slug: "regulated-compliance-scenarios"
+type: feature
+status: approved
+
+author: "arananet"
+created_at: "2026-07-25"
+updated_at: "2026-07-25"
+
+roles:
+  implementer: "@arananet"
+  reviewer: "@arananet"
+  qa: "@arananet"
+  product_owner: "@arananet"
+
+description: |
+  Regulated enterprises spend weeks of senior engineering time twice a year on
+  work that is mechanically enormous but intellectually shallow: proving to an
+  auditor that control X is actually implemented in the codebase, and working
+  out which of 400 services a new regulatory clause touches. Both tasks are
+  bounded by how many places one person can look, not by how hard the thinking
+  is — the exact shape a dynamic workflow is built for.
+
+  This feature ships two workflows.
+
+  `control-evidence-sweep` takes a control catalogue (SOC 2, ISO 27001,
+  PCI-DSS, DORA) and fans one investigator agent out per control to hunt for
+  concrete evidence in code, IaC and configuration. Every claimed piece of
+  evidence is then handed to an independent challenger agent that tries to
+  break it — because an evidence pack that overstates coverage is worse than
+  no pack at all, it fails the audit and burns the auditor's trust. Only
+  evidence that survives challenge is reported as satisfied; the rest is
+  reported as a gap with the specific missing artefact named.
+
+  `reg-change-impact` takes a regulatory delta (a new clause, a changed
+  retention period, a new consent requirement), decomposes it into discrete
+  engineering obligations, and fans out across the service inventory to find
+  every code path, data store and integration that the obligation lands on.
+  Findings are verified, then costed and sequenced into a remediation backlog
+  a programme manager can actually staff.
+
+acceptance_criteria:
+  - "Given a control catalogue in `args.controls`, when `control-evidence-sweep` runs, then exactly one investigator agent is spawned per control and each investigator's prompt names the control it owns."
+  - "Given an investigator that claims evidence for a control, when the verification phase runs, then a separate challenger agent receives that claim and independently returns a verdict of `confirmed`, `refuted` or `unverified`."
+  - "Given a claim the challenger refutes, when the evidence pack is assembled, then the control is reported as a gap and the refuted claim is retained with its refutation reason rather than silently dropped."
+  - "Given a claim the challenger cannot check, when the pack is assembled, then the control is reported as `unverified` and is counted separately from both satisfied and gap so the pack never overstates coverage."
+  - "Given no `args.controls`, when `control-evidence-sweep` runs, then it uses a built-in SOC 2 Common Criteria starter set and states in the result which catalogue it used."
+  - "Given a regulatory delta in `args.change`, when `reg-change-impact` runs, then it first decomposes the delta into discrete engineering obligations and reports that obligation list in the result."
+  - "Given the decomposed obligations and a discovered service inventory, when `reg-change-impact` runs, then one agent assesses each obligation-by-service pair that the scoping phase flagged as plausibly in scope, and the fan-out is capped by `args.maxAssessments` (default 60) so a large estate cannot exhaust the runtime's agent budget."
+  - "Given a completed impact assessment, when the result is returned, then every impacted item carries an owning service, a severity, an estimated effort band and the obligation it traces back to, so the output is a staffable backlog rather than prose."
+  - "Given an empty scope (no controls resolved, or no services discovered), when either workflow runs, then it returns a well-formed result reporting an empty scope instead of throwing."
+
+test_plan:
+  - "Integration: `control-evidence-sweep` with a 5-control `args.controls` spawns exactly 5 investigator agents and each prompt contains its control id."
+  - "Integration: `control-evidence-sweep` spawns one challenger agent per claimed evidence item, and the challenger prompt is distinct from the investigator prompt for the same control."
+  - "Unit: with a stub that forces every challenger verdict to `refuted`, the resulting pack reports zero satisfied controls, all controls as gaps, and retains each refutation reason."
+  - "Unit: with a stub that forces every challenger verdict to `unverified`, the pack counts them under `unverified` and not under `satisfied`."
+  - "Integration: `control-evidence-sweep` with `args` undefined runs to completion and reports the built-in SOC 2 catalogue name in its result."
+  - "Integration: `reg-change-impact` runs an obligation-decomposition agent before any per-service agent, and the returned result exposes the obligation list."
+  - "Unit: `reg-change-impact` with a scoping stub returning 200 candidate pairs caps assessment agents at the default 60, and honours a lower `args.maxAssessments`."
+  - "Unit: every impacted item in `reg-change-impact`'s result has non-empty `service`, `severity`, `effort` and `obligation` fields."
+  - "Integration: both workflows return an empty-scope result, without throwing, when the scoping agent yields no items."
+
+qa_notes: |
+  Run `control-evidence-sweep` against a repository whose compliance posture
+  you already know, and check the challenger actually refutes something. A run
+  where every single control comes back satisfied is the failure mode to watch
+  for — it usually means the challenger prompt is too agreeable, not that the
+  estate is perfect.
+
+  These workflows produce audit *input*, not audit *output*. A human control
+  owner still signs the evidence pack.
+
+out_of_scope:
+  - "Filing evidence into a GRC platform (Vanta, Drata, ServiceNow) — the pack is returned as structured data for a human or a separate integration to file."
+  - "Legal interpretation of a regulation. `reg-change-impact` maps obligations the operator supplies onto code; it does not decide what the regulation means."
+  - "Continuous/scheduled control monitoring — these are on-demand runs, not a monitoring agent."
+  - "Evidence for controls that live outside the repository (HR onboarding, physical security, vendor management)."
+
+implementation_skill: null
+
+eval_plan:
+  scenarios: []
+  metrics: []
+
+technical_notes: |
+  The investigate → challenge → synthesise shape is the repository's default
+  quality pattern, taken from the dynamic workflows documentation: independent
+  agents adversarially review each other's findings before anything is
+  reported. It costs roughly 2x the agents of a naive sweep and is worth it
+  here, because the entire business value of an evidence pack is that a third
+  party can trust it.
+
+  `reg-change-impact` caps its fan-out with `args.maxAssessments` rather than
+  assessing the full cross-product of obligations and services: a 15-obligation
+  delta against a 400-service estate is 6000 pairs, well past the runtime's
+  1000-agent cap. The scoping phase ranks candidate pairs so the cap truncates
+  the tail, not the head.
+
+linked_issues: []
+linked_prs: []

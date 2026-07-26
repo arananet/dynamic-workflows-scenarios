@@ -1,4 +1,4 @@
-# OpenSpec — Spec-Driven Development for `{{PROJECT_NAME}}`
+# OpenSpec — Spec-Driven Development for `dynamic-workflows-scenarios`
 
 OpenSpec is the spec-driven workflow this repo enforces. Every feature
 or bugfix starts with a spec file in `.openspec/specs/`. The spec

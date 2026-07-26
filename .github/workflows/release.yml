@@ -11,16 +11,32 @@ name: Release
 # Companion to sbom.yml: this workflow is the *creator* of releases,
 # sbom.yml runs on `release: published` for ad-hoc SBOM regeneration.
 
-on:
-  push:
-    tags: ["v*"]
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Tag to release (e.g. v1.2.3) — must already exist on origin"
-        required: true
-        type: string
+# ─────────────────────────────────────────────────────────────────────────────
+# DISABLED for this repository.
+#
+# dynamic-workflows-scenarios ships workflow scripts and OpenSpec specs — no
+# built artifacts, no container images, no published packages, no dependency
+# tree. The automatic triggers below were removed so this workflow no longer
+# runs on push/PR/schedule; it is retained as manual-dispatch only.
+#
+# To re-enable: delete the `on: workflow_dispatch` block and uncomment the
+# original trigger block that follows it.
+# ─────────────────────────────────────────────────────────────────────────────
 
+on:
+  workflow_dispatch:
+
+# ── Original triggers (disabled):
+# on:
+#   push:
+#     tags: ["v*"]
+#   workflow_dispatch:
+#     inputs:
+#       tag:
+#         description: "Tag to release (e.g. v1.2.3) — must already exist on origin"
+#         required: true
+#         type: string
+#
 permissions: read-all
 
 concurrency:

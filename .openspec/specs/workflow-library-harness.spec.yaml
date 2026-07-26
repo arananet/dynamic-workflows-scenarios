@@ -1,0 +1,90 @@
+title: "Workflow library harness — offline runtime emulation and validation"
+slug: "workflow-library-harness"
+type: feature
+status: approved
+
+author: "arananet"
+created_at: "2026-07-25"
+updated_at: "2026-07-25"
+
+roles:
+  implementer: "@arananet"
+  reviewer: "@arananet"
+  qa: "@arananet"
+  product_owner: "@arananet"
+
+description: |
+  Every scenario in this repository is a Claude Code dynamic workflow — a
+  JavaScript orchestration script that the workflow runtime executes with
+  `agent()`, `pipeline()` and `args` supplied as globals. Those globals only
+  exist inside Claude Code, so the scripts cannot be imported, linted for
+  behaviour, or regression-tested by ordinary tooling: a typo in a phase name
+  or an unguarded empty fan-out would only surface mid-run, after real tokens
+  had been spent across dozens of subagents.
+
+  This feature provides a dependency-free harness that emulates enough of the
+  runtime to execute a workflow script offline against stubbed agents. It
+  loads a script the way the runtime does (top-level `await`, top-level
+  `return`, `export const meta`), records every `agent()` and `pipeline()`
+  call, and synthesises schema-conformant fake results so the script's real
+  control flow runs end to end in milliseconds and for zero tokens. On top of
+  that, a shared conformance suite asserts the library-wide contract every
+  scenario must satisfy, so a broken workflow fails in CI rather than in a
+  customer's repository.
+
+acceptance_criteria:
+  - "Given a workflow script using `export const meta`, top-level `await` and a top-level `return`, when it is loaded through the harness, then the meta object and the script's return value are both recovered without the script being modified on disk."
+  - "Given a workflow script that calls `agent(prompt, { schema })`, when it runs under the harness, then the stub returns an object conforming to that JSON schema (required keys present, declared types honoured, arrays populated) so the script's downstream property access succeeds."
+  - "Given a workflow script that calls `pipeline(items, fn)`, when it runs under the harness, then `fn` is invoked once per item and the results are returned in input order."
+  - "Given any workflow run under the harness, when the run completes, then the harness exposes a transcript of every agent call with its prompt, label, schema and phase so tests can assert on orchestration shape."
+  - "Given the runtime's documented 1000-agent cap, when any scenario runs under the harness, then the harness throws as soon as a run would exceed it, and the conformance suite asserts every scenario stays under the cap even when its scoping phase returns an oversized inventory."
+  - "Given every script in `.claude/workflows/`, when the conformance suite runs, then each one exports a `meta.name` equal to its filename stem, a non-empty `meta.description`, runs to completion without throwing, issues at least one `agent()` call, and returns a defined value."
+  - "Given every scenario workflow, when it is invoked with `args` undefined, then it runs to completion using documented defaults rather than throwing."
+  - "Given a workflow script whose fan-out source is empty (no files, no services, no findings), when it runs, then it returns a well-formed result explaining that nothing was in scope instead of throwing or returning undefined."
+
+test_plan:
+  - "Unit: `harness.loadWorkflow` recovers `meta` from a fixture script that also returns a value, and leaves the on-disk source unchanged."
+  - "Unit: `fakeFromSchema` produces required keys for object schemas, respects string/number/boolean/array/object types, populates arrays with at least one item, and honours `enum` by returning the first allowed value."
+  - "Unit: `runWorkflow` records prompt, label and schema for each `agent()` call and returns them in call order in the transcript."
+  - "Unit: `pipeline` stub invokes the mapper once per item and preserves input order; an empty list yields an empty result without invoking the mapper."
+  - "Integration: every file in `.claude/workflows/` loads, has `meta.name` matching its filename stem, and has a non-empty `meta.description`."
+  - "Integration: every workflow runs to completion under the harness with `args` undefined and returns a defined value."
+  - "Integration: every workflow runs to completion when the scoping phase returns an empty inventory, and the result reports an empty scope rather than throwing."
+  - "Integration: for every workflow, the recorded transcript contains at least one agent call, and the agent total stays under the 1000-agent cap even when the scoping stub returns a 500-item inventory."
+  - "Integration: every agent call in every workflow has a non-empty prompt string."
+
+qa_notes: |
+  The harness deliberately does NOT emulate the runtime's scheduling,
+  resumability, permission prompts or token accounting — it emulates the
+  scripting surface only (`agent`, `pipeline`, `args`, `meta`). A green test
+  run proves a script's control flow is sound and its contract is met; it does
+  not prove the prompts elicit good answers from real subagents. Prompt
+  quality is validated by running the scenario against a real repository.
+
+out_of_scope:
+  - "Emulating concurrency limits by actually running work in parallel — the harness runs mappers sequentially and asserts the declared concurrency instead."
+  - "Evaluating subagent output quality, groundedness or token cost — that needs live runs, not the harness."
+  - "A CLI for running workflows outside Claude Code. These scripts are meant to run in the real runtime; the harness is a test fixture, not a runner."
+  - "Emulating pause/resume or cached agent results across runs."
+
+implementation_skill: null
+
+eval_plan:
+  scenarios: []
+  metrics: []
+
+technical_notes: |
+  Workflow scripts are not valid ES modules: they combine `export const meta`
+  with a top-level `return`. The harness therefore loads a script by reading
+  its source, rewriting the single token `export const meta =` to
+  `const meta = __ctx.meta =`, and compiling the result with the
+  `AsyncFunction` constructor with `__ctx`, `agent`, `pipeline` and `args` as
+  parameters. This preserves top-level `await` and top-level `return`, keeps
+  the on-disk script byte-identical to what Claude Code saved, and needs no
+  transpiler or dependency.
+
+  Node's built-in test runner (`node --test`) is used so the repository stays
+  dependency-free — there is no package manager step in CI.
+
+linked_issues: []
+linked_prs: []

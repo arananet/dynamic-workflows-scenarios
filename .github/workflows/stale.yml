@@ -7,11 +7,27 @@
 #   - openspec: spec-related discussion that may take longer to converge
 name: Stale
 
+# ─────────────────────────────────────────────────────────────────────────────
+# DISABLED for this repository.
+#
+# dynamic-workflows-scenarios ships workflow scripts and OpenSpec specs — no
+# built artifacts, no container images, no published packages, no dependency
+# tree. The automatic triggers below were removed so this workflow no longer
+# runs on push/PR/schedule; it is retained as manual-dispatch only.
+#
+# To re-enable: delete the `on: workflow_dispatch` block and uncomment the
+# original trigger block that follows it.
+# ─────────────────────────────────────────────────────────────────────────────
+
 on:
-  schedule:
-    - cron: "30 2 * * *" # daily at 02:30 UTC
   workflow_dispatch:
 
+# ── Original triggers (disabled):
+# on:
+#   schedule:
+#     - cron: "30 2 * * *" # daily at 02:30 UTC
+#   workflow_dispatch:
+#
 permissions: read-all
 
 jobs:

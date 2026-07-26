@@ -14,16 +14,32 @@ name: Issue Auto-Fix
 #   5. Existing CodeQL / gitleaks / dependency-review / spec-check
 #      workflows gate the agent's PR exactly like a human PR.
 
-on:
-  issues:
-    types: [labeled]
-  workflow_dispatch:
-    inputs:
-      issue_number:
-        description: "Issue number to auto-fix"
-        required: true
-        type: number
+# ─────────────────────────────────────────────────────────────────────────────
+# DISABLED for this repository.
+#
+# dynamic-workflows-scenarios ships workflow scripts and OpenSpec specs — no
+# built artifacts, no container images, no published packages, no dependency
+# tree. The automatic triggers below were removed so this workflow no longer
+# runs on push/PR/schedule; it is retained as manual-dispatch only.
+#
+# To re-enable: delete the `on: workflow_dispatch` block and uncomment the
+# original trigger block that follows it.
+# ─────────────────────────────────────────────────────────────────────────────
 
+on:
+  workflow_dispatch:
+
+# ── Original triggers (disabled):
+# on:
+#   issues:
+#     types: [labeled]
+#   workflow_dispatch:
+#     inputs:
+#       issue_number:
+#         description: "Issue number to auto-fix"
+#         required: true
+#         type: number
+#
 permissions: read-all
 
 concurrency:

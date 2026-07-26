@@ -6,16 +6,32 @@
 # auto-detected via a small inline matrix — delete rows your repo doesn't use.
 name: CodeQL
 
+# ─────────────────────────────────────────────────────────────────────────────
+# DISABLED for this repository.
+#
+# dynamic-workflows-scenarios ships workflow scripts and OpenSpec specs — no
+# built artifacts, no container images, no published packages, no dependency
+# tree. The automatic triggers below were removed so this workflow no longer
+# runs on push/PR/schedule; it is retained as manual-dispatch only.
+#
+# To re-enable: delete the `on: workflow_dispatch` block and uncomment the
+# original trigger block that follows it.
+# ─────────────────────────────────────────────────────────────────────────────
+
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  schedule:
-    # Every Monday at 03:17 UTC — off-peak, avoids the top-of-hour stampede.
-    - cron: "17 3 * * 1"
   workflow_dispatch:
 
+# ── Original triggers (disabled):
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#     branches: [main]
+#   schedule:
+#     # Every Monday at 03:17 UTC — off-peak, avoids the top-of-hour stampede.
+#     - cron: "17 3 * * 1"
+#   workflow_dispatch:
+#
 permissions: read-all
 
 concurrency:

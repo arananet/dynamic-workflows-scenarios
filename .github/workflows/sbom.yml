@@ -6,11 +6,27 @@
 # your compliance process needs it.
 name: SBOM
 
+# ─────────────────────────────────────────────────────────────────────────────
+# DISABLED for this repository.
+#
+# dynamic-workflows-scenarios ships workflow scripts and OpenSpec specs — no
+# built artifacts, no container images, no published packages, no dependency
+# tree. The automatic triggers below were removed so this workflow no longer
+# runs on push/PR/schedule; it is retained as manual-dispatch only.
+#
+# To re-enable: delete the `on: workflow_dispatch` block and uncomment the
+# original trigger block that follows it.
+# ─────────────────────────────────────────────────────────────────────────────
+
 on:
-  release:
-    types: [published]
   workflow_dispatch:
 
+# ── Original triggers (disabled):
+# on:
+#   release:
+#     types: [published]
+#   workflow_dispatch:
+#
 permissions: read-all
 
 jobs:
